@@ -67,7 +67,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
@@ -171,7 +170,6 @@ class MainViewModel : ViewModel() {
 
 
 @OptIn(UnstableApi::class)
-@Preview
 @Composable
 fun MainScreen(
     viewModel: MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
