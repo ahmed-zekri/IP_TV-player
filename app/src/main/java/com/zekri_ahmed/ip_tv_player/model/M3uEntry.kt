@@ -1,4 +1,4 @@
-// app/src/main/java/com/example/m3uplayer/model/M3uPlaylist.kt
+// app/src/main/java/com/zekri_ahmed/ip_tv_player/model/M3uEntry.kt
 
 package com.zekri_ahmed.ip_tv_player.model
 
@@ -9,6 +9,7 @@ data class M3uEntry(
     val title: String,
     val path: String,
     val duration: Long = -1, // in milliseconds, -1 if unknown
+    val timeShiftable: Boolean = true, // Default to true to allow time shifting for most streams
     val attributes: Map<String, String> = emptyMap()
 )
 
@@ -17,6 +18,7 @@ class M3uParser {
         val entries = mutableListOf<M3uEntry>()
         var currentTitle = ""
         var currentAttributes = mutableMapOf<String, String>()
+        var timeShiftable = true
 
         inputStream.bufferedReader().useLines { lines ->
             lines.forEach { line ->
@@ -39,6 +41,9 @@ class M3uParser {
                             currentAttributes[key] = value
                         }
 
+                        // Check if timeshift is disabled explicitly
+                        timeShiftable = currentAttributes["timeshift_disabled"]?.lowercase() != "true"
+
                         // Set duration as an attribute
                         if (duration > 0) {
                             currentAttributes["duration"] = duration.toString()
@@ -54,12 +59,14 @@ class M3uParser {
                                 title = currentTitle,
                                 path = line.trim(),
                                 duration = currentAttributes["duration"]?.toLongOrNull() ?: -1,
+                                timeShiftable = timeShiftable,
                                 attributes = currentAttributes.toMap()
                             )
                         )
                         // Reset for next entry
                         currentTitle = ""
                         currentAttributes = mutableMapOf()
+                        timeShiftable = true
                     }
                 }
             }

@@ -1,4 +1,4 @@
-// app/src/main/java/com/example/m3uplayer/ui/MainScreen.kt
+// app/src/main/java/com/zekri_ahmed/ip_tv_player/ui/MainScreen.kt
 
 @file:kotlin.OptIn(ExperimentalMaterial3Api::class)
 
@@ -9,6 +9,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.IBinder
 import android.provider.OpenableColumns
@@ -33,6 +34,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -69,6 +72,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.ViewModel
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -95,6 +101,10 @@ class MainViewModel : ViewModel() {
     // Track the currently playing channel index
     private val _currentChannelIndex = mutableIntStateOf(-1)
     val currentChannelIndex: State<Int> = _currentChannelIndex
+
+    // Track fullscreen state
+    private val _isFullScreen = mutableStateOf(false)
+    val isFullScreen = _isFullScreen
 
     fun loadPlaylist(context: Context, uri: Uri) {
         _currentFile.value = uri
@@ -134,7 +144,6 @@ class MainViewModel : ViewModel() {
         return name ?: "playlist.m3u"
     }
 
-
     fun setServiceFlow(flow: Flow<MediaPlayerService.PlayerState>) {
         _serviceFlow = flow
     }
@@ -166,8 +175,11 @@ class MainViewModel : ViewModel() {
             playlist[_currentChannelIndex.intValue]
         } else null
     }
-}
 
+    fun toggleFullScreen() {
+        _isFullScreen.value = !_isFullScreen.value
+    }
+}
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -175,6 +187,7 @@ fun MainScreen(
     viewModel: MainViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
     val context = LocalContext.current
+    val activity = context as? android.app.Activity
 
     // Service connection
     var mediaService: MediaPlayerService? by remember { mutableStateOf(null) }
@@ -234,106 +247,207 @@ fun MainScreen(
         }
     }
 
-    // UI
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("M3U Player with TimeShift") },
-                actions = {
-                    IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
-                        Icon(
-                            imageVector = Icons.Default.FolderOpen,
-                            contentDescription = "Open Playlist"
-                        )
-                    }
-                }
-            )
+    // Handle fullscreen changes
+    val isFullScreen by viewModel.isFullScreen
+    DisposableEffect(isFullScreen) {
+        if (activity != null) {
+            if (isFullScreen) {
+                // Set to fullscreen and landscape
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+
+                // Hide system UI
+                val window = activity.window
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else {
+                // Exit fullscreen and return to portrait
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+
+                // Show system UI
+                val window = activity.window
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.show(WindowInsetsCompat.Type.systemBars())
+            }
         }
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-        ) {
-            // Video player surface using PlayerView
-            AndroidView(
-                factory = { context ->
-                    PlayerView(context).apply {
-                        player = mediaService?.player // Ensure mediaService is not null
-                        useController = true // Enable playback controls
-                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT // Adjust video scaling
-                    }
-                },
-                update = { playerView ->
-                    playerView.player = mediaService?.player // Ensure player is always set on recomposition
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(16f / 9f) // Adjust aspect ratio as needed
-            )
 
-            // Player controls
-            PlayerControls(
-                playerState = playerState,
-                onPlay = {
-                    mediaService?.resume()
-                },
-                onPause = {
-                    mediaService?.pause()
-                },
-                onSeek = { position ->
-                    mediaService?.seekTo(position)
-                },
-                onPreviousChannel = {
-                    viewModel.previousChannel()
-                },
-                onNextChannel = {
-                    viewModel.nextChannel()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            )
+        onDispose {
+            if (activity != null) {
+                // Reset to portrait when component is disposed
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
-            // Channel indicators
-            if (viewModel.playlist.isNotEmpty()) {
-                ChannelIndicator(
-                    currentIndex = currentChannelIndex,
-                    totalChannels = viewModel.playlist.size,
-                    currentTitle = viewModel.getCurrentChannel()?.title ?: "",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                // Show system UI
+                val window = activity.window
+                val controller = WindowCompat.getInsetsController(window, window.decorView)
+                controller.show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+    }
+
+    // UI
+    if (isFullScreen) {
+        // Fullscreen layout
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Video player
+            Box(modifier = Modifier.fillMaxSize()) {
+                AndroidView(
+                    factory = { context ->
+                        PlayerView(context).apply {
+                            player = mediaService?.player
+                            useController = false // Disable default controls
+                            resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+                        }
+                    },
+                    update = { playerView ->
+                        playerView.player = mediaService?.player
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                // Custom controls overlay
+                FullscreenPlayerControls(
+                    playerState = playerState,
+                    onPlay = { mediaService?.resume() },
+                    onPause = { mediaService?.pause() },
+                    onSeek = { mediaService?.seekTo(it) },
+                    onSeekForward = { mediaService?.seekForward() },
+                    onSeekBackward = { mediaService?.seekBackward() },
+                    onPreviousChannel = { viewModel.previousChannel() },
+                    onNextChannel = { viewModel.nextChannel() },
+                    onToggleFullscreen = { viewModel.toggleFullScreen() },
+                    modifier = Modifier.fillMaxSize()
                 )
             }
-
-            // Channel list
-            Text(
-                text = "Channels",
-                style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-            )
-
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            ) {
-                items(viewModel.playlist.withIndex().toList()) { (index, entry) ->
-                    PlaylistItem(
-                        entry = entry,
-                        isPlaying = index == currentChannelIndex,
-                        onClick = {
-                            viewModel.playChannel(index)
+        }
+    } else {
+        // Regular layout
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = { Text("M3U Player with TimeShift") },
+                    actions = {
+                        IconButton(onClick = { filePickerLauncher.launch("*/*") }) {
+                            Icon(
+                                imageVector = Icons.Default.FolderOpen,
+                                contentDescription = "Open Playlist"
+                            )
                         }
+                    }
+                )
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+            ) {
+                // Video player surface using PlayerView
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(16f / 9f)
+                ) {
+                    AndroidView(
+                        factory = { context ->
+                            PlayerView(context).apply {
+                                player = mediaService?.player
+                                useController = false // Disable default controls
+                                resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                            }
+                        },
+                        update = { playerView ->
+                            playerView.player = mediaService?.player
+                        },
+                        modifier = Modifier.fillMaxSize()
+                    )
+
+                    // Fullscreen button overlay
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                    ) {
+                        IconButton(
+                            onClick = { viewModel.toggleFullScreen() }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Fullscreen,
+                                contentDescription = "Enter Fullscreen",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                            )
+                        }
+                    }
+                }
+
+                // Player controls
+                PlayerControls(
+                    playerState = playerState,
+                    onPlay = {
+                        mediaService?.resume()
+                    },
+                    onPause = {
+                        mediaService?.pause()
+                    },
+                    onSeek = { position ->
+                        mediaService?.seekTo(position)
+                    },
+                    onSeekForward = {
+                        mediaService?.seekForward()
+                    },
+                    onSeekBackward = {
+                        mediaService?.seekBackward()
+                    },
+                    onPreviousChannel = {
+                        viewModel.previousChannel()
+                    },
+                    onNextChannel = {
+                        viewModel.nextChannel()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                )
+
+                // Channel indicators
+                if (viewModel.playlist.isNotEmpty()) {
+                    ChannelIndicator(
+                        currentIndex = currentChannelIndex,
+                        totalChannels = viewModel.playlist.size,
+                        currentTitle = viewModel.getCurrentChannel()?.title ?: "",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
 
-                if (viewModel.playlist.isEmpty()) {
-                    item {
-                        EmptyPlaylist(
-                            onOpenClick = { filePickerLauncher.launch("*/*") }
+                // Channel list
+                Text(
+                    text = "Channels",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                )
+
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                ) {
+                    items(viewModel.playlist.withIndex().toList()) { (index, entry) ->
+                        PlaylistItem(
+                            entry = entry,
+                            isPlaying = index == currentChannelIndex,
+                            onClick = {
+                                viewModel.playChannel(index)
+                            }
                         )
+                    }
+
+                    if (viewModel.playlist.isEmpty()) {
+                        item {
+                            EmptyPlaylist(
+                                onOpenClick = { filePickerLauncher.launch("*/*") }
+                            )
+                        }
                     }
                 }
             }
@@ -348,6 +462,8 @@ fun PlayerControls(
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onSeek: (Long) -> Unit,
+    onSeekForward: () -> Unit,
+    onSeekBackward: () -> Unit,
     onPreviousChannel: () -> Unit,
     onNextChannel: () -> Unit,
     modifier: Modifier = Modifier
@@ -409,7 +525,7 @@ fun PlayerControls(
             }
 
             // Timeshift controls
-            IconButton(onClick = { onSeek(playerState.currentPosition - 10000) }) {
+            IconButton(onClick = onSeekBackward) {
                 Icon(Icons.Default.Replay10, "Rewind 10s")
             }
 
@@ -428,13 +544,190 @@ fun PlayerControls(
                 )
             }
 
-            IconButton(onClick = { onSeek(playerState.currentPosition + 30000) }) {
+            IconButton(onClick = onSeekForward) {
                 Icon(Icons.AutoMirrored.Filled.ArrowForward, "Forward 30s")
             }
 
             // Next channel
             IconButton(onClick = onNextChannel) {
                 Icon(Icons.Default.SkipNext, "Next Channel")
+            }
+        }
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+fun FullscreenPlayerControls(
+    playerState: MediaPlayerService.PlayerState,
+    onPlay: () -> Unit,
+    onPause: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onSeekForward: () -> Unit,
+    onSeekBackward: () -> Unit,
+    onPreviousChannel: () -> Unit,
+    onNextChannel: () -> Unit,
+    onToggleFullscreen: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var controlsVisible by remember { mutableStateOf(true) }
+
+    // Auto-hide controls after a few seconds
+    LaunchedEffect(controlsVisible) {
+        if (controlsVisible) {
+            kotlinx.coroutines.delay(5000) // 5 seconds
+            controlsVisible = false
+        }
+    }
+
+    Box(
+        modifier = modifier
+            .clickable { controlsVisible = !controlsVisible }
+    ) {
+        if (controlsVisible) {
+            // Semi-transparent background for better visibility
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+            ) {
+                // Title and close fullscreen at the top
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.TopCenter),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = playerState.title.ifEmpty { "No media playing" },
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    IconButton(onClick = onToggleFullscreen) {
+                        Icon(
+                            imageVector = Icons.Default.FullscreenExit,
+                            contentDescription = "Exit Fullscreen",
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                        )
+                    }
+                }
+
+                // Controls at the bottom
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                ) {
+                    // Progress
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = formatDuration(playerState.currentPosition),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                        )
+
+                        Slider(
+                            value = if (playerState.duration > 0) {
+                                playerState.currentPosition.toFloat() / playerState.duration
+                            } else 0f,
+                            onValueChange = { value ->
+                                val newPosition = (value * playerState.duration).toLong()
+                                onSeek(newPosition)
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .padding(horizontal = 8.dp)
+                        )
+
+                        Text(
+                            text = formatDuration(playerState.duration),
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                        )
+                    }
+
+                    // Buffer progress
+                    LinearProgressIndicator(
+                        progress = {
+                            if (playerState.duration > 0) {
+                                playerState.bufferedPosition.toFloat() / playerState.duration
+                            } else 0f
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Playback controls
+                    Row(
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        // Channel controls
+                        IconButton(onClick = onPreviousChannel) {
+                            Icon(
+                                Icons.Default.SkipPrevious,
+                                "Previous Channel",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+
+                        // Timeshift controls
+                        IconButton(onClick = onSeekBackward) {
+                            Icon(
+                                Icons.Default.Replay10,
+                                "Rewind 10s",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = {
+                                if (playerState.isPlaying) onPause() else onPlay()
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (playerState.isPlaying) {
+                                    Icons.Default.Pause
+                                } else {
+                                    Icons.Default.PlayArrow
+                                },
+                                contentDescription = if (playerState.isPlaying) "Pause" else "Play",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                                modifier = Modifier.size(48.dp)
+                            )
+                        }
+
+                        IconButton(onClick = onSeekForward) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                "Forward 30s",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+
+                        // Next channel
+                        IconButton(onClick = onNextChannel) {
+                            Icon(
+                                Icons.Default.SkipNext,
+                                "Next Channel",
+                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
+                                modifier = Modifier.size(32.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
             }
         }
     }

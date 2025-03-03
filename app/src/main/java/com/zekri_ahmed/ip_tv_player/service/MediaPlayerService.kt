@@ -1,5 +1,3 @@
-// app/src/main/java/com/example/m3uplayer/service/MediaPlayerService.kt
-
 package com.zekri_ahmed.ip_tv_player.service
 
 import android.app.Notification
@@ -18,7 +16,6 @@ import androidx.media3.datasource.DefaultDataSource
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
 import androidx.media3.datasource.cache.SimpleCache
-
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +32,8 @@ class MediaPlayerService : Service() {
     private val _playerState = MutableStateFlow(PlayerState())
     val playerState: StateFlow<PlayerState> = _playerState
 
-    // Buffer management
-    private val bufferSize = 1024 * 1024 * 500 // 500MB cache for multiple channels
+    // Increase buffer size to 1GB
+    private val bufferSize = 1024 * 1024 * 1024 // 1GB cache
 
     // Track currently playing channel
     private var currentMediaUrl: String = ""
@@ -48,7 +45,8 @@ class MediaPlayerService : Service() {
         val bufferedPosition: Long = 0,
         val duration: Long = 0,
         val currentMediaUrl: String = "",
-        val title: String = ""
+        val title: String = "",
+        val isFullScreen: Boolean = false
     )
 
     inner class MediaPlayerBinder : Binder() {
@@ -125,7 +123,8 @@ class MediaPlayerService : Service() {
             bufferedPosition = player.bufferedPosition,
             duration = player.duration,
             currentMediaUrl = currentUrl,
-            title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: ""
+            title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "",
+            isFullScreen = _playerState.value.isFullScreen
         )
 
         // Update the current media URL
@@ -136,9 +135,18 @@ class MediaPlayerService : Service() {
 
     // Media player controls
     fun play(mediaUrl: String, title: String = "") {
-        // Save current position of the currently playing channel
+        // Clear cache when switching channels
         if (currentMediaUrl.isNotEmpty() && currentMediaUrl != mediaUrl) {
+            // Save current position of the currently playing channel
             currentChannelPosition[currentMediaUrl] = player.currentPosition
+
+            // Clear cache for the new channel
+            try {
+                cache.release()
+                setupCache()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
 
         val mediaItem = MediaItem.Builder()
@@ -195,6 +203,20 @@ class MediaPlayerService : Service() {
 
     fun seekTo(position: Long) {
         player.seekTo(position)
+    }
+
+    fun seekForward(seconds: Int = 30) {
+        val newPosition = player.currentPosition + (seconds * 1000L)
+        player.seekTo(newPosition)
+    }
+
+    fun seekBackward(seconds: Int = 10) {
+        val newPosition = player.currentPosition - (seconds * 1000L)
+        player.seekTo(newPosition.coerceAtLeast(0))
+    }
+
+    fun toggleFullScreen() {
+        _playerState.value = _playerState.value.copy(isFullScreen = !_playerState.value.isFullScreen)
     }
 
     override fun onBind(intent: Intent?): IBinder {
