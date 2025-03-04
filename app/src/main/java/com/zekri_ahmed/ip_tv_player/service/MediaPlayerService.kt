@@ -166,14 +166,12 @@ class MediaPlayerService : Service() {
         // Check if we need to resume from a previous position
         val savedPosition = currentChannelPosition[mediaUrl] ?: 0L
 
-        // If same media is already playing, don't reload
-        if (currentMediaUrl == mediaUrl && player.isPlaying) {
-            return
-        }
-
-        // If same media is loaded but not playing, just resume
-        if (currentMediaUrl == mediaUrl && !player.isPlaying) {
-            player.play()
+        // If same media is already loaded (regardless of playing state)
+        if (currentMediaUrl == mediaUrl) {
+            // If not playing, just resume
+            if (!player.isPlaying) {
+                player.play()
+            }
             return
         }
 
@@ -206,8 +204,17 @@ class MediaPlayerService : Service() {
     }
 
     fun seekForward(seconds: Int = 30) {
-        val newPosition = player.currentPosition + (seconds * 1000L)
-        player.seekTo(newPosition)
+        // Instead of seeking to the absolute position, we'll check against current buffer
+        val currentPos = player.currentPosition
+        val newPosition = currentPos + (seconds * 1000L)
+
+        // Only seek if we're not going beyond the buffered position
+        if (newPosition <= player.bufferedPosition) {
+            player.seekTo(newPosition)
+        } else {
+            // If we'd go beyond buffer, only go as far as the buffer allows
+            player.seekTo(player.bufferedPosition - 2000) // 2 seconds before buffer end for safety
+        }
     }
 
     fun seekBackward(seconds: Int = 10) {

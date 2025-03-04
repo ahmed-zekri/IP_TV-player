@@ -16,6 +16,7 @@ import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.OptIn
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -30,13 +31,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.FullscreenExit
-import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Replay10
@@ -45,6 +47,7 @@ import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Tv
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -53,6 +56,7 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -68,6 +72,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -310,7 +315,6 @@ fun MainScreen(
                     onPlay = { mediaService?.resume() },
                     onPause = { mediaService?.pause() },
                     onSeek = { mediaService?.seekTo(it) },
-                    onSeekForward = { mediaService?.seekForward() },
                     onSeekBackward = { mediaService?.seekBackward() },
                     onPreviousChannel = { viewModel.previousChannel() },
                     onNextChannel = { viewModel.nextChannel() },
@@ -468,93 +472,142 @@ fun PlayerControls(
     onNextChannel: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier) {
-        // Title
-        Text(
-            text = playerState.title.ifEmpty { "No media playing" },
-            style = MaterialTheme.typography.titleMedium,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Progress
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
+    Card(
+        modifier = modifier,
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .background(Color.Black.copy(alpha = 0.8f))
+                .padding(16.dp)
         ) {
-            Text(formatDuration(playerState.currentPosition))
-
-            Slider(
-                value = if (playerState.duration > 0) {
-                    playerState.currentPosition.toFloat() / playerState.duration
-                } else 0f,
-                onValueChange = { value ->
-                    val newPosition = (value * playerState.duration).toLong()
-                    onSeek(newPosition)
-                },
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(horizontal = 8.dp)
+            // Title
+            Text(
+                text = playerState.title.ifEmpty { "No media playing" },
+                style = MaterialTheme.typography.titleMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = Color.White
             )
 
-            Text(formatDuration(playerState.duration))
-        }
+            Spacer(modifier = Modifier.height(8.dp))
 
-        // Buffer progress
-        LinearProgressIndicator(
-            progress = {
-                if (playerState.duration > 0) {
-                    playerState.bufferedPosition.toFloat() / playerState.duration
-                } else 0f
-            },
-            modifier = Modifier.fillMaxWidth(),
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Playback controls
-        Row(
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Channel controls
-            IconButton(onClick = onPreviousChannel) {
-                Icon(Icons.Default.SkipPrevious, "Previous Channel")
-            }
-
-            // Timeshift controls
-            IconButton(onClick = onSeekBackward) {
-                Icon(Icons.Default.Replay10, "Rewind 10s")
-            }
-
-            IconButton(
-                onClick = {
-                    if (playerState.isPlaying) onPause() else onPlay()
-                }
+            // Progress
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = if (playerState.isPlaying) {
-                        Icons.Default.Pause
-                    } else {
-                        Icons.Default.PlayArrow
+                Text(
+                    text = formatDuration(playerState.currentPosition),
+                    color = Color.White
+                )
+
+                Slider(
+                    value = if (playerState.duration > 0) {
+                        playerState.currentPosition.toFloat() / playerState.duration
+                    } else 0f,
+                    onValueChange = { value ->
+                        val newPosition = (value * playerState.duration).toLong()
+                        onSeek(newPosition)
                     },
-                    contentDescription = if (playerState.isPlaying) "Pause" else "Play"
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(horizontal = 8.dp),
+                    colors = SliderDefaults.colors(
+                        thumbColor = Color.White,
+                        activeTrackColor = Color.White,
+                        inactiveTrackColor = Color.Gray
+                    )
+                )
+
+                Text(
+                    text = formatDuration(playerState.duration),
+                    color = Color.White
                 )
             }
 
-            IconButton(onClick = onSeekForward) {
-                Icon(Icons.AutoMirrored.Filled.ArrowForward, "Forward 30s")
-            }
+            // Buffer progress
+            LinearProgressIndicator(
+                progress = {
+                    if (playerState.duration > 0) {
+                        playerState.bufferedPosition.toFloat() / playerState.duration
+                    } else 0f
+                },
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.Red,
+                trackColor = Color.DarkGray
+            )
 
-            // Next channel
-            IconButton(onClick = onNextChannel) {
-                Icon(Icons.Default.SkipNext, "Next Channel")
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Playback controls
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                // Channel controls
+                IconButton(onClick = onPreviousChannel) {
+                    Icon(
+                        Icons.Default.SkipPrevious,
+                        "Previous Channel",
+                        tint = Color.White
+                    )
+                }
+
+                // Timeshift controls
+                IconButton(onClick = onSeekBackward) {
+                    Icon(
+                        Icons.Default.Replay10,
+                        "Rewind 10s",
+                        tint = Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        if (playerState.isPlaying) onPause() else onPlay()
+                    },
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(Color.Red.copy(alpha = 0.7f), CircleShape)
+                        .padding(4.dp)
+                ) {
+                    Icon(
+                        imageVector = if (playerState.isPlaying) {
+                            Icons.Default.Pause
+                        } else {
+                            Icons.Default.PlayArrow
+                        },
+                        contentDescription = if (playerState.isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+
+                IconButton(onClick = onSeekForward) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        "Forward 30s",
+                        tint = Color.White
+                    )
+                }
+
+                // Next channel
+                IconButton(onClick = onNextChannel) {
+                    Icon(
+                        Icons.Default.SkipNext,
+                        "Next Channel",
+                        tint = Color.White
+                    )
+                }
             }
         }
     }
 }
+
+
+
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -563,7 +616,6 @@ fun FullscreenPlayerControls(
     onPlay: () -> Unit,
     onPause: () -> Unit,
     onSeek: (Long) -> Unit,
-    onSeekForward: () -> Unit,
     onSeekBackward: () -> Unit,
     onPreviousChannel: () -> Unit,
     onNextChannel: () -> Unit,
@@ -589,144 +641,172 @@ fun FullscreenPlayerControls(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.6f))
                     .padding(16.dp)
             ) {
                 // Title and close fullscreen at the top
-                Row(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.TopCenter),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-                    Text(
-                        text = playerState.title.ifEmpty { "No media playing" },
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    IconButton(onClick = onToggleFullscreen) {
-                        Icon(
-                            imageVector = Icons.Default.FullscreenExit,
-                            contentDescription = "Exit Fullscreen",
-                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = playerState.title.ifEmpty { "No media playing" },
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f)
                         )
+
+                        IconButton(onClick = onToggleFullscreen) {
+                            Icon(
+                                imageVector = Icons.Default.FullscreenExit,
+                                contentDescription = "Exit Fullscreen",
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
 
                 // Controls at the bottom
-                Column(
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
+                        .align(Alignment.BottomCenter),
+                    colors = CardDefaults.cardColors(containerColor = Color.Black.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
-                    // Progress
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
                     ) {
-                        Text(
-                            text = formatDuration(playerState.currentPosition),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                        )
-
-                        Slider(
-                            value = if (playerState.duration > 0) {
-                                playerState.currentPosition.toFloat() / playerState.duration
-                            } else 0f,
-                            onValueChange = { value ->
-                                val newPosition = (value * playerState.duration).toLong()
-                                onSeek(newPosition)
-                            },
-                            modifier = Modifier
-                                .weight(1f)
-                                .padding(horizontal = 8.dp)
-                        )
-
-                        Text(
-                            text = formatDuration(playerState.duration),
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                        )
-                    }
-
-                    // Buffer progress
-                    LinearProgressIndicator(
-                        progress = {
-                            if (playerState.duration > 0) {
-                                playerState.bufferedPosition.toFloat() / playerState.duration
-                            } else 0f
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    // Playback controls
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        // Channel controls
-                        IconButton(onClick = onPreviousChannel) {
-                            Icon(
-                                Icons.Default.SkipPrevious,
-                                "Previous Channel",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-
-                        // Timeshift controls
-                        IconButton(onClick = onSeekBackward) {
-                            Icon(
-                                Icons.Default.Replay10,
-                                "Rewind 10s",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
-
-                        IconButton(
-                            onClick = {
-                                if (playerState.isPlaying) onPause() else onPlay()
-                            }
+                        // Progress
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Icon(
-                                imageVector = if (playerState.isPlaying) {
-                                    Icons.Default.Pause
-                                } else {
-                                    Icons.Default.PlayArrow
+                            Text(
+                                text = formatDuration(playerState.currentPosition),
+                                color = Color.White
+                            )
+
+                            Slider(
+                                value = if (playerState.duration > 0) {
+                                    playerState.currentPosition.toFloat() / playerState.duration
+                                } else 0f,
+                                onValueChange = { value ->
+                                    val newPosition = (value * playerState.duration).toLong()
+                                    onSeek(newPosition)
                                 },
-                                contentDescription = if (playerState.isPlaying) "Pause" else "Play",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.size(48.dp)
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(horizontal = 8.dp),
+                                colors = SliderDefaults.colors(
+                                    thumbColor = Color.White,
+                                    activeTrackColor = Color.White,
+                                    inactiveTrackColor = Color.Gray
+                                )
+                            )
+
+                            Text(
+                                text = formatDuration(playerState.duration),
+                                color = Color.White
                             )
                         }
 
-                        IconButton(onClick = onSeekForward) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                "Forward 30s",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.size(32.dp)
-                            )
+                        // Buffer progress
+                        LinearProgressIndicator(
+                            progress = {
+                                if (playerState.duration > 0) {
+                                    playerState.bufferedPosition.toFloat() / playerState.duration
+                                } else 0f
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            color = Color.Red,
+                            trackColor = Color.DarkGray
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        // Playback controls
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceEvenly,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            // Channel controls
+                            IconButton(onClick = onPreviousChannel) {
+                                Icon(
+                                    Icons.Default.SkipPrevious,
+                                    "Previous Channel",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+
+                            // Timeshift controls
+                            IconButton(onClick = onSeekBackward) {
+                                Icon(
+                                    Icons.Default.Replay10,
+                                    "Rewind 10s",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+
+                            IconButton(
+                                onClick = {
+                                    if (playerState.isPlaying) onPause() else onPlay()
+                                },
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(Color.Red.copy(alpha = 0.8f), CircleShape)
+                                    .padding(4.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (playerState.isPlaying) {
+                                        Icons.Default.Pause
+                                    } else {
+                                        Icons.Default.PlayArrow
+                                    },
+                                    contentDescription = if (playerState.isPlaying) "Pause" else "Play",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(36.dp)
+                                )
+                            }
+
+                            IconButton(onClick = onSeekBackward) {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.ArrowForward,
+                                    "Forward 30s",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
+
+                            // Next channel
+                            IconButton(onClick = onNextChannel) {
+                                Icon(
+                                    Icons.Default.SkipNext,
+                                    "Next Channel",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                            }
                         }
 
-                        // Next channel
-                        IconButton(onClick = onNextChannel) {
-                            Icon(
-                                Icons.Default.SkipNext,
-                                "Next Channel",
-                                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                modifier = Modifier.size(32.dp)
-                            )
-                        }
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
-
-                    Spacer(modifier = Modifier.height(8.dp))
                 }
             }
         }
