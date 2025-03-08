@@ -1,7 +1,7 @@
 [versions]
 agp = "8.8.2"
 jaffree = "2021.12.30"
-kotlin = "1.9.0"
+kotlin = "2.1.10"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -13,7 +13,10 @@ material3 = "1.3.1"
 materialIconsExtended = "1.7.8"
 media3Exoplayer = "1.5.1"
 media3Ui = "1.5.1"
-
+hilt = "2.55" # Latest stable version as of early 2025
+hiltNavigationCompose = "1.2.0" # For Compose navigation integration
+composeCompiler = "2.1.10"
+media3Session = "1.5.1" # Use the latest stable compatible with Kotlin 2.1.x
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleRuntimeKtx" }
@@ -35,8 +38,13 @@ androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-man
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-media3-ui = { group = "androidx.media3", name = "media3-ui", version.ref = "media3Ui" }
 material3 = { module = "androidx.compose.material3:material3", version.ref = "material3" }
-
+# Add Hilt dependencies
+hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
+hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
+hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+androidx-media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3Session" }
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-
+hilt-android = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "composeCompiler" }

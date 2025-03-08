@@ -1,20 +1,12 @@
-// app/src/main/java/com/zekri_ahmed/ip_tv_player/model/M3uEntry.kt
+package com.zekri_ahmed.ip_tv_player.data.local
 
-package com.zekri_ahmed.ip_tv_player.model
-
+import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 import java.io.File
 import java.io.InputStream
 
-data class M3uEntry(
-    val title: String,
-    val path: String,
-    val duration: Long = -1, // in milliseconds, -1 if unknown
-    val timeShiftable: Boolean = true, // Default to true to allow time shifting for most streams
-    val attributes: Map<String, String> = emptyMap()
-)
-
 class M3uParser {
-    private fun parse(inputStream: InputStream): List<M3uEntry> {
+
+    fun parse(inputStream: InputStream): List<M3uEntry> {
         val entries = mutableListOf<M3uEntry>()
         var currentTitle = ""
         var currentAttributes = mutableMapOf<String, String>()

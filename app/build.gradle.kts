@@ -1,6 +1,9 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("kotlin-kapt") // Use this direct reference instead of an alias
+    alias(libs.plugins.hilt.android) // Add Hilt plugin
+    alias(libs.plugins.compose.compiler)
 }
 
 android {
@@ -40,7 +43,7 @@ android {
         compose = true
     }
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
+        kotlinCompilerExtensionVersion = "1.5.15"
     }
     packaging {
         resources {
@@ -67,6 +70,12 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.jaffree)
     implementation(libs.androidx.media3.ui)
+    // Add Hilt dependencies
+    implementation(libs.hilt.android)
+    kapt(libs.hilt.compiler)
+    implementation(libs.androidx.media3.session)
+    implementation(libs.hilt.navigation.compose) // For Compose integration
+    implementation (libs.androidx.material.icons.extended)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -74,4 +83,8 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+}
+kapt {
+    correctErrorTypes = true
 }

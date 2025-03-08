@@ -1,5 +1,3 @@
-// app/src/main/java/com/zekri_ahmed/ip_tv_player/MainActivity.kt
-
 package com.zekri_ahmed.ip_tv_player
 
 import android.os.Bundle
@@ -10,11 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import androidx.media3.common.util.UnstableApi
-import com.zekri_ahmed.ip_tv_player.ui.MainScreen
+import com.zekri_ahmed.ip_tv_player.presentation.screen.MainScreen
+import dagger.hilt.android.AndroidEntryPoint
 
-@UnstableApi
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -27,7 +26,9 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    MainScreen(
+
+                    )
                 }
             }
         }
