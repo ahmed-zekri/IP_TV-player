@@ -87,6 +87,9 @@ class MediaControllerImpl @Inject constructor(
         player.seekTo(position)
     }
 
+    override fun getPlayer(): ExoPlayer = player
+
+
     private fun updatePlayerState() {
         val currentUrl = player.currentMediaItem?.localConfiguration?.uri.toString()
 

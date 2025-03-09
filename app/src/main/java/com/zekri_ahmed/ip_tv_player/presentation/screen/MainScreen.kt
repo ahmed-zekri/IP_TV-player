@@ -33,7 +33,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     var isPlaying by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
-        VideoPlayerSurface()
+        VideoPlayerSurface(viewModel)
 
         // Channel List
         LazyColumn(modifier = Modifier.weight(1f)) {

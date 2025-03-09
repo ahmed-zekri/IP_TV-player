@@ -2,6 +2,7 @@ package com.zekri_ahmed.ip_tv_player.presentation.screen
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.media3.exoplayer.ExoPlayer
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 import com.zekri_ahmed.ip_tv_player.domain.repository.M3uRepository
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
@@ -35,6 +36,8 @@ fun MainScreenPreview() {
             override fun seekTo(position: Long) {
 
             }
+
+            override fun getPlayer(): ExoPlayer? = null
         }),
     )
     MainScreen(viewModel)

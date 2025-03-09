@@ -1,32 +1,49 @@
 package com.zekri_ahmed.ip_tv_player.presentation.screen
 
+import android.view.ViewGroup
+import android.widget.FrameLayout
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.media3.ui.PlayerView
+import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
 
 @Composable
-@Preview(showBackground = true)
-fun VideoPlayerSurface() {
-    // Video Player Surface
+fun VideoPlayerSurface(viewModel: MainViewModel = hiltViewModel()) {
+    val isFullScreen by viewModel.isFullScreen.collectAsState()
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .aspectRatio(16f / 9f)
             .background(MaterialTheme.colorScheme.surfaceVariant)
+            .run {
+                if (isFullScreen) this else aspectRatio(16f / 9f)
+            }
     ) {
-        // Video player placeholder
-        Text(
-            text = "Video Player",
-            modifier = Modifier.align(Alignment.Center),
-            style = MaterialTheme.typography.titleLarge
+        // Use AndroidView to embed the PlayerView in our Compose UI
+        AndroidView(
+            factory = { ctx ->
+                PlayerView(ctx).apply {
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    useController = false
+                    keepScreenOn = true
+                }
+            },
+            update = { playerView ->
+                // Directly get the player from our ViewModel
+                playerView.player = viewModel.getPlayer()
+            }
         )
     }
-
 }

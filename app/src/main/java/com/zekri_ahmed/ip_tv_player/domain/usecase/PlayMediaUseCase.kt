@@ -22,4 +22,5 @@ class PlayMediaUseCase @Inject constructor(
     fun seekTo(position: Long) {
         mediaController.seekTo(position)
     }
+    fun getPlayer() = mediaController.getPlayer()
 }

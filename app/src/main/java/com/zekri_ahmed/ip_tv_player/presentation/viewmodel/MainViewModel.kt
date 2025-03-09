@@ -100,4 +100,5 @@ class MainViewModel @Inject constructor(
     fun seekTo(position: Long) {
         playMediaUseCase.seekTo(position)
     }
+    fun getPlayer() = playMediaUseCase.getPlayer()
 }
