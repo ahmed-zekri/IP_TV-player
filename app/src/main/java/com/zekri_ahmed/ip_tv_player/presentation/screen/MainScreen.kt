@@ -22,10 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
+import com.zekri_ahmed.ip_tv_player.domain.repository.M3uRepository
+import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
+import com.zekri_ahmed.ip_tv_player.domain.usecase.LoadPlaylistUseCase
+import com.zekri_ahmed.ip_tv_player.domain.usecase.PlayMediaUseCase
 import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
 
 @Composable
-@Preview
 fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     // Collect state from the ViewModel
     val playlist by viewModel.playlist.collectAsState()
@@ -100,6 +104,38 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
             )
         }
     }
+
+
+}
+
+@Composable
+@Preview
+fun MainScreenPreview() {
+    val viewModel = MainViewModel(
+        LoadPlaylistUseCase(object : M3uRepository {
+            override suspend fun loadPlaylist(filePath: String): List<M3uEntry> =
+                listOf()
+
+        }),
+        playMediaUseCase = PlayMediaUseCase(object : MediaController {
+            override fun play(mediaUrl: String, title: String) {
+
+            }
+
+            override fun pause() {
+
+            }
+
+            override fun resume() {
+
+            }
+
+            override fun seekTo(position: Long) {
+
+            }
+        }),
+    )
+    MainScreen(viewModel)
 
 
 }
