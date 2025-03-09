@@ -9,14 +9,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 
 @Composable
+@Preview(showBackground = true)
 fun ChannelItem(
-    entry: M3uEntry,
-    isPlaying: Boolean,
-    onClick: () -> Unit
+    entry: M3uEntry = M3uEntry("Title", "URL"),
+    isPlaying: Boolean = false,
+    onClick: () -> Unit = {}
 ) {
     Card(
         modifier = Modifier

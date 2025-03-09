@@ -15,16 +15,19 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 @Composable
+//show white background in preview
+@Preview(showBackground = true)
 fun PlayerControls(
-    isPlaying: Boolean,
-    onPlay: () -> Unit,
-    onPause: () -> Unit,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit,
-    onToggleFullScreen: () -> Unit
+    isPlaying: Boolean = false,
+    onPlay: () -> Unit = {},
+    onPause: () -> Unit = {},
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
+    onToggleFullScreen: () -> Unit = {}
 ) {
     Row(
         modifier = Modifier
