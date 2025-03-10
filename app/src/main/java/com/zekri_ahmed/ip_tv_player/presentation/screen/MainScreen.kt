@@ -25,7 +25,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.path?.let {
+        uri?.toString()?.let {
             viewModel.loadPlaylist(it)
         }
     }
