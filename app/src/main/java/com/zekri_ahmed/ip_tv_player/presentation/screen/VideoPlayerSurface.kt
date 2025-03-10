@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material.icons.Icons
@@ -42,34 +43,39 @@ import kotlinx.coroutines.delay
 @Preview
 fun VideoPlayerSurface(
     playerState: PlayerState = PlayerState(),
-    playlist: List<M3uEntry> = listOf(),
+    playlist: List<M3uEntry> = emptyList(),
     resume: () -> Unit = {},
     pause: () -> Unit = {},
     nextChannel: () -> Unit = {},
     previousChannel: () -> Unit = {},
-    toggleFullScreen: () -> Unit = {}
+    toggleFullScreen: () -> Unit = {},
+    isLandscape: Boolean = false
 ) {
     var isControlsVisible by remember { mutableStateOf(true) }
 
-// LaunchedEffect to hide controls after a delay
+    // LaunchedEffect to hide controls after a delay
     LaunchedEffect(isControlsVisible) {
         if (isControlsVisible) {
             delay(3000) // Hide controls after 3 seconds of inactivity
             isControlsVisible = false
         }
     }
-    // LaunchedEffect to show controls when the channel changes
-    LaunchedEffect(playerState.currentMediaUrl) {
-        isControlsVisible = true // Show controls when the channel changes
+
+    // LaunchedEffect to show controls when the channel changes or player state changes
+    LaunchedEffect(playerState.currentMediaUrl, playerState.isPlaying, playerState.isPaused) {
+        isControlsVisible = true // Show controls when the channel or player state changes
     }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surfaceVariant)
             .run {
-                if (playerState.isFullScreen) this else aspectRatio(16f / 9f)
+                if (isLandscape) fillMaxSize() else aspectRatio(16f / 9f)
             }
-
+            .clickable {
+                isControlsVisible = true // Show controls when the player is clicked
+            }
     ) {
         // Use AndroidView to embed the PlayerView in our Compose UI
         Box {
@@ -87,36 +93,32 @@ fun VideoPlayerSurface(
                 update = { playerView ->
                     if (playerState.player != null)
                         playerView.player = playerState.player as Player
-                }, modifier = Modifier.clickable {
-                    isControlsVisible = true
-
-                })
+                }
+            )
 
             if (playerState.isLoading && !playerState.isPlaying && !playerState.isPaused)
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = Color.White
                 )
+
             if (playerState.playerError != null) {
                 Column(Modifier.align(Alignment.Center)) {
                     Icon(
                         imageVector = Icons.Default.Error,
                         contentDescription = playerState.playerError,
-                        tint = Color.White, modifier = Modifier.align(Alignment.CenterHorizontally)
+                        tint = Color.White,
+                        modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                     Spacer(Modifier.height(10.dp))
                     Text(playerState.playerError, color = Color.White)
                 }
             }
-
         }
 
         // Pullable controls overlay
         if (playlist.isNotEmpty()) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-            ) {
+            Box(modifier = Modifier.align(Alignment.BottomCenter)) {
                 AnimatedVisibility(
                     visible = isControlsVisible,
                     enter = fadeIn(animationSpec = tween(durationMillis = 300)),

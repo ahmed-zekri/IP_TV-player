@@ -1,5 +1,8 @@
 package com.zekri_ahmed.ip_tv_player.presentation.screen
 
+import android.content.pm.ActivityInfo
+import android.content.res.Configuration
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -9,12 +12,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +28,9 @@ import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
 
 @Composable
 fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
     // Collect state from the ViewModel
     val playlist by viewModel.playlist.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
@@ -54,9 +63,19 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     // Focus manager to clear focus when the user submits the search
     val focusManager = LocalFocusManager.current
 
-    Column(modifier = Modifier.fillMaxSize()) {
+    // Handle full-screen toggle
+    val context = LocalContext.current
+    LaunchedEffect(playerState.isFullScreen) {
+        val activity = context as ComponentActivity
+        activity.requestedOrientation = if (playerState.isFullScreen) {
+            ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        } else {
+            ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+        }
+    }
 
-        if (playlist.isNotEmpty()) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        if (playlist.isNotEmpty())
             VideoPlayerSurface(
                 playerState,
                 playlist,
@@ -64,31 +83,39 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                 viewModel::pause,
                 viewModel::nextChannel,
                 viewModel::previousChannel,
-                viewModel::toggleFullScreen
+                viewModel::toggleFullScreen,
+                isLandscape // Pass the orientation state
             )
-        }
-        if (playlist.isNotEmpty())
-            SearchBar(
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                onSearch = { focusManager.clearFocus() }, // Clear focus when the user submits the search
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            )
-        // Channel List
-        LazyColumn(modifier = Modifier.weight(1f)) {
-            items(filteredPlaylist) { entry ->
-                ChannelItem(entry = entry,
-                    isPlaying = playlist.indexOf(entry) == currentChannelIndex,
-                    onClick = {
-                        viewModel.playChannel(playlist.indexOf(entry))
-                    })
-            }
-        }
 
-        if (playlist.isEmpty()) {
-            EmptyPlaylist(onOpenClick = { filePickerLauncher.launch("*/*") })
+        // Show other UI elements only if not in full-screen mode
+        if (!playerState.isFullScreen) {
+            if (playlist.isNotEmpty()) {
+                SearchBar(
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    onSearch = { focusManager.clearFocus() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp)
+                )
+            }
+
+            // Channel List
+            LazyColumn(modifier = Modifier.weight(1f)) {
+                items(filteredPlaylist) { entry ->
+                    ChannelItem(
+                        entry = entry,
+                        isPlaying = playlist.indexOf(entry) == currentChannelIndex,
+                        onClick = {
+                            viewModel.playChannel(playlist.indexOf(entry))
+                        }
+                    )
+                }
+            }
+
+            if (playlist.isEmpty()) {
+                EmptyPlaylist(onOpenClick = { filePickerLauncher.launch("*/*") })
+            }
         }
     }
 }
