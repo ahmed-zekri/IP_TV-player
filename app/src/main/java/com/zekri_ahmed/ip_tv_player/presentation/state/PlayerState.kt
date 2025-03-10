@@ -1,4 +1,4 @@
-package com.zekri_ahmed.ip_tv_player.presentation.screen
+package com.zekri_ahmed.ip_tv_player.presentation.state
 
 data class PlayerState(
     val isPlaying: Boolean = false,

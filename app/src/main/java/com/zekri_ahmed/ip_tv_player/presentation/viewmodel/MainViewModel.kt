@@ -5,7 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 import com.zekri_ahmed.ip_tv_player.domain.usecase.LoadPlaylistUseCase
 import com.zekri_ahmed.ip_tv_player.domain.usecase.PlayMediaUseCase
-import com.zekri_ahmed.ip_tv_player.presentation.screen.PlayerState
+import com.zekri_ahmed.ip_tv_player.presentation.state.PlayerState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

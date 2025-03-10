@@ -35,6 +35,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
+import com.zekri_ahmed.ip_tv_player.presentation.state.PlayerState
 import kotlinx.coroutines.delay
 
 @Composable
