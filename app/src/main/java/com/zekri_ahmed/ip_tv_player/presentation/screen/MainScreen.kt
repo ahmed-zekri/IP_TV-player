@@ -9,9 +9,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
@@ -29,9 +26,8 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
             viewModel.loadPlaylist(it)
         }
     }
-    // Track play/pause state
-    var isPlaying by remember { mutableStateOf(false) }
 
+    // Track play/pause state
     Column(modifier = Modifier.fillMaxSize()) {
         VideoPlayerSurface(viewModel)
 
@@ -43,7 +39,7 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                     isPlaying = playlist.indexOf(entry) == currentChannelIndex,
                     onClick = {
                         viewModel.playChannel(playlist.indexOf(entry))
-                        isPlaying = true
+
                     }
                 )
             }
@@ -57,22 +53,18 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
             // Player Controls
             PlayerControls(
-                isPlaying = isPlaying,
+                isPlaying = viewModel.isPlaying(),
                 onPlay = {
                     viewModel.resume()
-                    isPlaying = true
                 },
                 onPause = {
                     viewModel.pause()
-                    isPlaying = false
                 },
                 onNext = {
                     viewModel.nextChannel()
-                    isPlaying = true
                 },
                 onPrevious = {
                     viewModel.previousChannel()
-                    isPlaying = true
                 },
                 onToggleFullScreen = { viewModel.toggleFullScreen() }
             )

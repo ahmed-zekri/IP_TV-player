@@ -112,6 +112,7 @@ class MediaControllerImpl @Inject constructor(
 }
 
 data class PlayerState(
+    val player: Player? = null, // Expose the player here
     val isPlaying: Boolean = false,
     val currentPosition: Long = 0,
     val bufferedPosition: Long = 0,
