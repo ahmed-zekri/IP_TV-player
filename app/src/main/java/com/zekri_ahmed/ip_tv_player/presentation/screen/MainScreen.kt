@@ -17,6 +17,7 @@ import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
 fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     // Collect state from the ViewModel
     val playlist by viewModel.playlist.collectAsState()
+    val playerState by viewModel.playerState.collectAsState()
     val currentChannelIndex by viewModel.currentChannelIndex.collectAsState()
     // File picker launcher
     val filePickerLauncher = rememberLauncherForActivityResult(
@@ -29,7 +30,15 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
     // Track play/pause state
     Column(modifier = Modifier.fillMaxSize()) {
-        VideoPlayerSurface(viewModel)
+        VideoPlayerSurface(
+            playerState,
+            playlist,
+            viewModel::resume,
+            viewModel::pause,
+            viewModel::nextChannel,
+            viewModel::previousChannel,
+            viewModel::toggleFullScreen
+        )
 
         // Channel List
         LazyColumn(modifier = Modifier.weight(1f)) {
@@ -51,23 +60,6 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
             )
 
 
-            // Player Controls
-            PlayerControls(
-                isPlaying = viewModel.isPlaying(),
-                onPlay = {
-                    viewModel.resume()
-                },
-                onPause = {
-                    viewModel.pause()
-                },
-                onNext = {
-                    viewModel.nextChannel()
-                },
-                onPrevious = {
-                    viewModel.previousChannel()
-                },
-                onToggleFullScreen = { viewModel.toggleFullScreen() }
-            )
         }
     }
 

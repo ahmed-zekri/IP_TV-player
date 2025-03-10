@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 import com.zekri_ahmed.ip_tv_player.domain.usecase.LoadPlaylistUseCase
 import com.zekri_ahmed.ip_tv_player.domain.usecase.PlayMediaUseCase
+import com.zekri_ahmed.ip_tv_player.presentation.screen.PlayerState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +29,26 @@ class MainViewModel @Inject constructor(
     // State for fullscreen mode
     private val _isFullScreen = MutableStateFlow(false)
     val isFullScreen: StateFlow<Boolean> = _isFullScreen
+
+    // State for player state
+    private val _playerState = MutableStateFlow(PlayerState())
+    val playerState: StateFlow<PlayerState> = _playerState
+
+    init {
+        // The key part: collect changes from the original media player state
+        viewModelScope.launch {
+            // This assumes playMediaUseCase.playerState is a Flow that emits updates
+            // whenever the underlying media player state changes
+            playMediaUseCase.playerState.collect { mediaPlayerState ->
+                _playerState.value = PlayerState(
+                    isPlaying = mediaPlayerState.isPlaying,
+                    currentPosition = mediaPlayerState.currentPosition,
+                    duration = mediaPlayerState.duration,
+                    player = mediaPlayerState.player
+                )
+            }
+        }
+    }
 
     // Load the playlist
     fun loadPlaylist(filePath: String) {
@@ -86,6 +107,7 @@ class MainViewModel @Inject constructor(
     // Toggle fullscreen mode
     fun toggleFullScreen() {
         _isFullScreen.value = !_isFullScreen.value
+        _playerState.value = playerState.value.copy(isFullScreen = !_isFullScreen.value)
     }
 
     // Player control methods
@@ -101,7 +123,4 @@ class MainViewModel @Inject constructor(
         playMediaUseCase.seekTo(position)
     }
 
-    fun isPlaying(): Boolean = playMediaUseCase.playerState.value.isPlaying
-
-    fun getPlayer() = playMediaUseCase.playerState.value.player
 }
