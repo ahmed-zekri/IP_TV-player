@@ -70,6 +70,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.jaffree)
     implementation(libs.androidx.media3.ui)
+    implementation(libs.coil.compose)
     // Add Hilt dependencies
     implementation(libs.hilt.android)
     kapt(libs.hilt.compiler)
