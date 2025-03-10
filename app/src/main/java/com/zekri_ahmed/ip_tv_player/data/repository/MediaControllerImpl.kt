@@ -4,8 +4,10 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.zekri_ahmed.ip_tv_player.domain.model.PlayerState
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -14,7 +16,7 @@ import javax.inject.Singleton
 class MediaControllerImpl @Inject constructor(
     private val player: ExoPlayer
 ) : MediaController {
-    private val _playerState = MutableStateFlow(PlayerState())
+    private val playerState = MutableStateFlow(PlayerState())
 
 
     // Track currently playing channel
@@ -36,7 +38,7 @@ class MediaControllerImpl @Inject constructor(
                 // Save position when stopping to allow resuming later
                 if (state == Player.STATE_IDLE) {
                     currentMediaUrl.takeIf { it.isNotEmpty() }?.let { url ->
-                        currentChannelPosition[url] = _playerState.value.currentPosition
+                        currentChannelPosition[url] = playerState.value.currentPosition
                     }
                 }
             }
@@ -87,20 +89,21 @@ class MediaControllerImpl @Inject constructor(
         player.seekTo(position)
     }
 
-    override fun getPlayer(): ExoPlayer = player
+    override fun getState() = playerState.asStateFlow()
 
 
     private fun updatePlayerState() {
         val currentUrl = player.currentMediaItem?.localConfiguration?.uri.toString()
 
-        _playerState.value = PlayerState(
+        playerState.value = PlayerState(
+            player = player,
             isPlaying = player.isPlaying,
             currentPosition = player.currentPosition,
             bufferedPosition = player.bufferedPosition,
             duration = player.duration,
             currentMediaUrl = currentUrl,
             title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "",
-            isFullScreen = _playerState.value.isFullScreen
+            isFullScreen = playerState.value.isFullScreen
         )
 
         // Update the current media URL
@@ -111,13 +114,3 @@ class MediaControllerImpl @Inject constructor(
 
 }
 
-data class PlayerState(
-    val player: Player? = null, // Expose the player here
-    val isPlaying: Boolean = false,
-    val currentPosition: Long = 0,
-    val bufferedPosition: Long = 0,
-    val duration: Long = 0,
-    val currentMediaUrl: String = "",
-    val title: String = "",
-    val isFullScreen: Boolean = false
-)
