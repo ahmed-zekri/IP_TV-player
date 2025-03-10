@@ -11,15 +11,17 @@ import javax.inject.Inject
 class PlayMediaUseCase @Inject constructor(
     private val mediaController: MediaController
 ) {
-    private val _playerState = MutableStateFlow(PlayerState())
+    private val _playerState =
+        MutableStateFlow(PlayerState(player = mediaController.getPlayer(), isPlaying = false))
     val playerState: StateFlow<PlayerState> = _playerState
     operator fun invoke(channel: M3uEntry) {
         mediaController.play(channel.path, channel.title)
-        _playerState.update { it.copy(isPlaying = false) }
     }
 
     fun pause() {
         mediaController.pause()
+        _playerState.update { it.copy(isPlaying = false) }
+
     }
 
     fun resume() {
