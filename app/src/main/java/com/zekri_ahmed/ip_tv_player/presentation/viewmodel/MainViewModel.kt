@@ -27,8 +27,8 @@ class MainViewModel @Inject constructor(
     val currentChannelIndex: StateFlow<Int> = _currentChannelIndex
 
     // State for fullscreen mode
-    private val _isFullScreen = MutableStateFlow(false)
-    val isFullScreen: StateFlow<Boolean> = _isFullScreen
+    private val isFullScreen = MutableStateFlow(false)
+
 
     // State for player state
     private val _playerState = MutableStateFlow(PlayerState())
@@ -41,13 +41,14 @@ class MainViewModel @Inject constructor(
             // whenever the underlying media player state changes
             playMediaUseCase.playerState.collect { mediaPlayerState ->
 
-           println(mediaPlayerState)
+                println(mediaPlayerState)
                 _playerState.value = PlayerState(
                     isPlaying = mediaPlayerState.isPlaying,
                     currentPosition = mediaPlayerState.currentPosition,
                     duration = mediaPlayerState.duration,
                     player = mediaPlayerState.player,
-                    isLoading = mediaPlayerState.isLoading
+                    isLoading = mediaPlayerState.isLoading,
+                    playerError = mediaPlayerState.playerError
                 )
             }
         }
@@ -109,8 +110,8 @@ class MainViewModel @Inject constructor(
 
     // Toggle fullscreen mode
     fun toggleFullScreen() {
-        _isFullScreen.value = !_isFullScreen.value
-        _playerState.value = playerState.value.copy(isFullScreen = !_isFullScreen.value)
+        isFullScreen.value = !isFullScreen.value
+        _playerState.value = playerState.value.copy(isFullScreen = isFullScreen.value)
     }
 
     // Player control methods
