@@ -14,7 +14,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.zekri_ahmed.ip_tv_player.MainActivity
-import com.zekri_ahmed.ip_tv_player.R
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -33,10 +32,22 @@ class MediaPlayerService : MediaSessionService() {
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
+
+        // Initialize the MediaSession
+        mediaSession = MediaSession.Builder(this, player)
+            .setSessionActivity(
+                PendingIntent.getActivity(
+                    this,
+                    0,
+                    Intent(this, MainActivity::class.java),
+                    PendingIntent.FLAG_IMMUTABLE
+                )
+            )
+            .build()
+
+        // Start the service in the foreground with the media notification
         startForeground(NOTIFICATION_ID, createNotification())
     }
-
-
 
     override fun onDestroy() {
         player.release()
@@ -61,22 +72,26 @@ class MediaPlayerService : MediaSessionService() {
     }
 
     private fun createNotification(title: String = "M3U Player"): Notification {
+        // Create an intent to bring the app to the foreground
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-
+        val pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_background)
+            .setSmallIcon(androidx.media3.session.R.drawable.media_session_service_notification_ic_music_note)
             .setContentTitle(title)
             .setContentText("Media playback active")
-            .setContentIntent(pendingIntent)
             .setStyle(
                 MediaStyleNotificationHelper.MediaStyle(mediaSession)
                     .setShowActionsInCompactView(0, 1, 2)
             )
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setPriority(NotificationCompat.PRIORITY_LOW).setContentIntent(pendingIntent)
             .build()
     }
 

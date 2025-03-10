@@ -4,6 +4,7 @@ import android.Manifest.permission.READ_EXTERNAL_STORAGE
 import android.Manifest.permission.READ_MEDIA_AUDIO
 import android.Manifest.permission.READ_MEDIA_VIDEO
 import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -12,12 +13,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.UnstableApi
 import com.zekri_ahmed.ip_tv_player.presentation.screen.MainScreen
+import com.zekri_ahmed.ip_tv_player.service.MediaPlayerService
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,7 +31,7 @@ class MainActivity : ComponentActivity() {
     private val requiredPermissions = when {
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
             // Android 14+
-            arrayOf( READ_MEDIA_VIDEO, READ_MEDIA_AUDIO, READ_MEDIA_VISUAL_USER_SELECTED)
+            arrayOf(READ_MEDIA_VIDEO, READ_MEDIA_AUDIO, READ_MEDIA_VISUAL_USER_SELECTED)
         }
 
         Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
@@ -75,6 +79,9 @@ class MainActivity : ComponentActivity() {
         // Keep the screen on while the app is active
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
+        // Start the MediaPlayerService
+        startMediaPlayerService()
+
         setContent {
             MaterialTheme {
                 Surface(
@@ -85,6 +92,12 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    @OptIn(UnstableApi::class)
+    private fun startMediaPlayerService() {
+        val intent = Intent(this, MediaPlayerService::class.java)
+        ContextCompat.startForegroundService(this, intent)
     }
 
     override fun onDestroy() {
