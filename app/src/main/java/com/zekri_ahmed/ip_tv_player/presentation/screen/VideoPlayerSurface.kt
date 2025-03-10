@@ -67,7 +67,7 @@ fun VideoPlayerSurface(
                 }
             )
 
-            if (playerState.isLoading && !playerState.isPlaying)
+            if (playerState.isLoading && !playerState.isPlaying && !playerState.isPaused)
                 CircularProgressIndicator(
                     modifier = Modifier.align(Alignment.Center),
                     color = Color.White

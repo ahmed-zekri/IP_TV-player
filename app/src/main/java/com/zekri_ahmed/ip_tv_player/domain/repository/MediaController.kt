@@ -14,6 +14,7 @@ interface MediaController {
 data class PlayerState(
     val player: Any? = null, // Expose the player here
     val isPlaying: Boolean = false,
+    val isPaused: Boolean = false,
     val currentPosition: Long = 0,
     val bufferedPosition: Long = 0,
     val duration: Long = 0,

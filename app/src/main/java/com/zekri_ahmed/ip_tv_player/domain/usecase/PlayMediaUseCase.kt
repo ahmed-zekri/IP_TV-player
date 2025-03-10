@@ -1,8 +1,8 @@
 package com.zekri_ahmed.ip_tv_player.domain.usecase
 
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
-import com.zekri_ahmed.ip_tv_player.domain.model.PlayerState
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
+import com.zekri_ahmed.ip_tv_player.domain.repository.PlayerState
 import kotlinx.coroutines.flow.StateFlow
 import javax.inject.Inject
 

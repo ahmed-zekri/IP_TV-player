@@ -41,14 +41,15 @@ class MainViewModel @Inject constructor(
             // whenever the underlying media player state changes
             playMediaUseCase.playerState.collect { mediaPlayerState ->
 
-                println(mediaPlayerState)
+
                 _playerState.value = PlayerState(
                     isPlaying = mediaPlayerState.isPlaying,
                     currentPosition = mediaPlayerState.currentPosition,
                     duration = mediaPlayerState.duration,
                     player = mediaPlayerState.player,
                     isLoading = mediaPlayerState.isLoading,
-                    playerError = mediaPlayerState.playerError
+                    playerError = mediaPlayerState.playerError,
+                    isPaused = mediaPlayerState.isPaused
                 )
             }
         }

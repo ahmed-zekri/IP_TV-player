@@ -4,8 +4,8 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.zekri_ahmed.ip_tv_player.domain.model.PlayerState
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
+import com.zekri_ahmed.ip_tv_player.domain.repository.PlayerState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
@@ -16,6 +16,7 @@ import javax.inject.Singleton
 class MediaControllerImpl @Inject constructor(
     private val player: ExoPlayer
 ) : MediaController {
+    private var isPaused: Boolean = false
     private val playerState = MutableStateFlow(PlayerState())
 
 
@@ -79,10 +80,14 @@ class MediaControllerImpl @Inject constructor(
 
     override fun pause() {
         player.pause()
+        isPaused = true
+        updatePlayerState()
     }
 
     override fun resume() {
         player.play()
+        isPaused = false
+        updatePlayerState()
     }
 
     override fun seekTo(position: Long) {
@@ -105,7 +110,8 @@ class MediaControllerImpl @Inject constructor(
             title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "",
             isFullScreen = playerState.value.isFullScreen,
             isLoading = player.isLoading,
-            playerError = player.playerError?.message
+            playerError = player.playerError?.message,
+            isPaused=isPaused
         )
 
         // Update the current media URL
