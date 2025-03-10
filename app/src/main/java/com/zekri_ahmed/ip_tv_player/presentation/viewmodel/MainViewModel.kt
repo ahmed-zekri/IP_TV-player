@@ -37,14 +37,17 @@ class MainViewModel @Inject constructor(
     init {
         // The key part: collect changes from the original media player state
         viewModelScope.launch {
-            // This assumes playMediaUseCase.playerState is a Flow that emits updates
+            //playMediaUseCase.playerState is a Flow that emits updates
             // whenever the underlying media player state changes
             playMediaUseCase.playerState.collect { mediaPlayerState ->
+
+           println(mediaPlayerState)
                 _playerState.value = PlayerState(
                     isPlaying = mediaPlayerState.isPlaying,
                     currentPosition = mediaPlayerState.currentPosition,
                     duration = mediaPlayerState.duration,
-                    player = mediaPlayerState.player
+                    player = mediaPlayerState.player,
+                    isLoading = mediaPlayerState.isLoading
                 )
             }
         }

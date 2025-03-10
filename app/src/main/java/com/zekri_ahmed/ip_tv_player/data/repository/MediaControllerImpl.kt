@@ -103,7 +103,9 @@ class MediaControllerImpl @Inject constructor(
             duration = player.duration,
             currentMediaUrl = currentUrl,
             title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "",
-            isFullScreen = playerState.value.isFullScreen
+            isFullScreen = playerState.value.isFullScreen,
+            isLoading = player.isLoading,
+            playerError = player.playerError?.message
         )
 
         // Update the current media URL

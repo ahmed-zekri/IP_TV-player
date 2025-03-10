@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -39,22 +40,27 @@ fun VideoPlayerSurface(
 
     ) {
         // Use AndroidView to embed the PlayerView in our Compose UI
-        AndroidView(
-            factory = { ctx ->
-                PlayerView(ctx).apply {
-                    layoutParams = FrameLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.MATCH_PARENT
-                    )
-                    useController = false
-                    keepScreenOn = true
+        Box {
+            AndroidView(
+                factory = { ctx ->
+                    PlayerView(ctx).apply {
+                        layoutParams = FrameLayout.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        useController = false
+                        keepScreenOn = true
+                    }
+                },
+                update = { playerView ->
+                    if (playerState.player != null)
+                        playerView.player = playerState.player as Player
                 }
-            },
-            update = { playerView ->
-                if (playerState.player != null)
-                    playerView.player = playerState.player as Player
-            }
-        )
+            )
+
+            if (playerState.isLoading && !playerState.isPlaying)
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        }
 
         // Pullable controls overlay
         if (playlist.isNotEmpty()) {

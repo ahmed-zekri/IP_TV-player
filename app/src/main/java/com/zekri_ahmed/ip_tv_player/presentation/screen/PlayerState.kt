@@ -5,5 +5,6 @@ data class PlayerState(
     val currentPosition: Long = 0,
     val isFullScreen: Boolean = false,
     val duration: Long = 0,
-    val player: Any? = null
+    val player: Any? = null,
+    val isLoading: Boolean = false
 )

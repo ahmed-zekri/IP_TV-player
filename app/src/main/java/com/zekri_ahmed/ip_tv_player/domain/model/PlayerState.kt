@@ -10,5 +10,7 @@ data class PlayerState(
     val duration: Long = 0,
     val currentMediaUrl: String = "",
     val title: String = "",
-    val isFullScreen: Boolean = false
+    val isFullScreen: Boolean = false,
+    val isLoading: Boolean = false,
+    val playerError: String? = null
 )
