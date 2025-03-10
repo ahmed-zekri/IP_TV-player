@@ -101,14 +101,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Get the currently playing channel
-    fun getCurrentChannel(): M3uEntry? {
-        return if (_currentChannelIndex.value >= 0 && _currentChannelIndex.value < _playlist.value.size) {
-            _playlist.value[_currentChannelIndex.value]
-        } else {
-            null
-        }
-    }
 
     // Toggle fullscreen mode
     fun toggleFullScreen() {
