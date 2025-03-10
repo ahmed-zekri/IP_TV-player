@@ -30,15 +30,16 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
 
     // Track play/pause state
     Column(modifier = Modifier.fillMaxSize()) {
-        VideoPlayerSurface(
-            playerState,
-            playlist,
-            viewModel::resume,
-            viewModel::pause,
-            viewModel::nextChannel,
-            viewModel::previousChannel,
-            viewModel::toggleFullScreen
-        )
+        if (playlist.isNotEmpty())
+            VideoPlayerSurface(
+                playerState,
+                playlist,
+                viewModel::resume,
+                viewModel::pause,
+                viewModel::nextChannel,
+                viewModel::previousChannel,
+                viewModel::toggleFullScreen
+            )
 
         // Channel List
         LazyColumn(modifier = Modifier.weight(1f)) {
