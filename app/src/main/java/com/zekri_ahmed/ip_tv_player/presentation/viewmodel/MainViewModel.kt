@@ -49,7 +49,8 @@ class MainViewModel @Inject constructor(
                     player = mediaPlayerState.player,
                     isLoading = mediaPlayerState.isLoading,
                     playerError = mediaPlayerState.playerError,
-                    isPaused = mediaPlayerState.isPaused
+                    isPaused = mediaPlayerState.isPaused,
+                    currentMediaUrl = mediaPlayerState.currentMediaUrl
                 )
             }
         }

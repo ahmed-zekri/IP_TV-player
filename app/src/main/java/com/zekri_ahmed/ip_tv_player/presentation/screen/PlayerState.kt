@@ -8,5 +8,6 @@ data class PlayerState(
     val duration: Long = 0,
     val player: Any? = null,
     val isLoading: Boolean = false,
-    val playerError: String? = null
+    val playerError: String? = null,
+    val currentMediaUrl: String? = null
 )

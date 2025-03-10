@@ -2,7 +2,12 @@ package com.zekri_ahmed.ip_tv_player.presentation.screen
 
 import android.view.ViewGroup
 import android.widget.FrameLayout
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +21,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,6 +35,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
 import androidx.media3.ui.PlayerView
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
+import kotlinx.coroutines.delay
 
 @Composable
 @Preview
@@ -37,8 +48,19 @@ fun VideoPlayerSurface(
     previousChannel: () -> Unit = {},
     toggleFullScreen: () -> Unit = {}
 ) {
+    var isControlsVisible by remember { mutableStateOf(true) }
 
-
+// LaunchedEffect to hide controls after a delay
+    LaunchedEffect(isControlsVisible) {
+        if (isControlsVisible) {
+            delay(3000) // Hide controls after 3 seconds of inactivity
+            isControlsVisible = false
+        }
+    }
+    // LaunchedEffect to show controls when the channel changes
+    LaunchedEffect(playerState.currentMediaUrl) {
+        isControlsVisible = true // Show controls when the channel changes
+    }
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -64,8 +86,10 @@ fun VideoPlayerSurface(
                 update = { playerView ->
                     if (playerState.player != null)
                         playerView.player = playerState.player as Player
-                }
-            )
+                }, modifier = Modifier.clickable {
+                    isControlsVisible = true
+
+                })
 
             if (playerState.isLoading && !playerState.isPlaying && !playerState.isPaused)
                 CircularProgressIndicator(
@@ -92,14 +116,20 @@ fun VideoPlayerSurface(
                 modifier = Modifier
                     .align(Alignment.BottomCenter)
             ) {
-                PlayerControls(
-                    isPlaying = playerState.isPlaying,
-                    onPlay = resume,
-                    onPause = pause,
-                    onNext = nextChannel,
-                    onPrevious = previousChannel,
-                    onToggleFullScreen = toggleFullScreen
-                )
+                AnimatedVisibility(
+                    visible = isControlsVisible,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 300))
+                ) {
+                    PlayerControls(
+                        isPlaying = playerState.isPlaying,
+                        onPlay = resume,
+                        onPause = pause,
+                        onNext = nextChannel,
+                        onPrevious = previousChannel,
+                        onToggleFullScreen = toggleFullScreen
+                    )
+                }
             }
         }
     }
