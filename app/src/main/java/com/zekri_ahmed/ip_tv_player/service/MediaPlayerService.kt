@@ -8,7 +8,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.datasource.cache.Cache
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
@@ -26,7 +26,7 @@ class MediaPlayerService : MediaSessionService() {
     lateinit var player: ExoPlayer
 
     @Inject
-    lateinit var cache: SimpleCache
+    lateinit var cache: Cache
 
     private lateinit var mediaSession: MediaSession
 
@@ -80,13 +80,7 @@ class MediaPlayerService : MediaSessionService() {
             .build()
     }
 
-    private fun updateNotification(title: String) {
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.notify(NOTIFICATION_ID, createNotification(title))
-    }
-
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
         return mediaSession
     }
 
