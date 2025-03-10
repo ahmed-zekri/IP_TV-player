@@ -1,5 +1,9 @@
 package com.zekri_ahmed.ip_tv_player
 
+import android.Manifest.permission.READ_EXTERNAL_STORAGE
+import android.Manifest.permission.READ_MEDIA_AUDIO
+import android.Manifest.permission.READ_MEDIA_VIDEO
+import android.Manifest.permission.READ_MEDIA_VISUAL_USER_SELECTED
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -21,25 +25,21 @@ class MainActivity : ComponentActivity() {
 
     // Define minimum required permissions based on Android version
     private val requiredPermissions = when {
-        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
-            // Android 13+
-            arrayOf(
-                // Only need to access documents/files that user selects via file picker
-                // No need for broad media permissions since we're only accessing specific files
-                android.Manifest.permission.POST_NOTIFICATIONS,
-                android.Manifest.permission.READ_MEDIA_VIDEO,
-                android.Manifest.permission.READ_MEDIA_AUDIO
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE -> {
+            // Android 14+
+            arrayOf( READ_MEDIA_VIDEO, READ_MEDIA_AUDIO, READ_MEDIA_VISUAL_USER_SELECTED)
+        }
 
-            )
+        Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> {
+            // Android 13
+            arrayOf(READ_MEDIA_VIDEO, READ_MEDIA_AUDIO)
         }
 
         else -> {
-            // For Android 12 and below, we may not need any permissions when using content URIs
-            // READ_EXTERNAL_STORAGE is only needed if you're accessing files directly without a picker
-            arrayOf()
+            // Android 12 and below
+            arrayOf(READ_EXTERNAL_STORAGE)
         }
     }
-
 
     // Permission launcher
     private val permissionLauncher = registerForActivityResult(
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
         if (!allGranted) {
             Toast.makeText(
                 this,
-                "Notifications permission is needed for playback alerts",
+                "Required permissions are not granted. Some features may not work.",
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
             permissionLauncher.launch(permissionsToRequest)
         }
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
