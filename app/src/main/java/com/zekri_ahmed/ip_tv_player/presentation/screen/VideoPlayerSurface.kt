@@ -1,7 +1,6 @@
 package com.zekri_ahmed.ip_tv_player.presentation.screen
 
-import android.view.ViewGroup
-import android.widget.FrameLayout
+import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -34,11 +33,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 import com.zekri_ahmed.ip_tv_player.presentation.state.PlayerState
 import kotlinx.coroutines.delay
 
+@OptIn(UnstableApi::class)
 @Composable
 @Preview
 fun VideoPlayerSurface(
@@ -82,10 +84,8 @@ fun VideoPlayerSurface(
             AndroidView(
                 factory = { ctx ->
                     PlayerView(ctx).apply {
-                        layoutParams = FrameLayout.LayoutParams(
-                            ViewGroup.LayoutParams.MATCH_PARENT,
-                            ViewGroup.LayoutParams.MATCH_PARENT
-                        )
+                        resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FILL
+
                         useController = false
                         keepScreenOn = true
                     }
