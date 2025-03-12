@@ -13,7 +13,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaStyleNotificationHelper
 import com.zekri_ahmed.ip_tv_player.MainActivity
-import com.zekri_ahmed.ip_tv_player.R
 import com.zekri_ahmed.ip_tv_player.data.CHANNEL_ID
 import com.zekri_ahmed.ip_tv_player.data.NOTIFICATION_ID
 import com.zekri_ahmed.ip_tv_player.domain.notification.NotificationProvider
