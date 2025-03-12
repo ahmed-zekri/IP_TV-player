@@ -1,20 +1,19 @@
 package com.zekri_ahmed.ip_tv_player.service
 
-import android.app.Notification
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
-import android.content.Intent
-import androidx.core.app.NotificationCompat
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.cache.Cache
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import androidx.media3.session.MediaStyleNotificationHelper
-import com.zekri_ahmed.ip_tv_player.MainActivity
+import com.zekri_ahmed.ip_tv_player.data.NOTIFICATION_ID
+import com.zekri_ahmed.ip_tv_player.domain.usecase.DownloadImageUseCase
+import com.zekri_ahmed.ip_tv_player.domain.usecase.GetLastLoadedPlaylistUseCase
+import com.zekri_ahmed.ip_tv_player.domain.usecase.PlayMediaUseCase
+import com.zekri_ahmed.ip_tv_player.domain.usecase.UpdateNotificationUseCase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @UnstableApi
@@ -27,26 +26,49 @@ class MediaPlayerService : MediaSessionService() {
     @Inject
     lateinit var cache: Cache
 
-    private lateinit var mediaSession: MediaSession
+    @Inject
+    lateinit var downloadImageUseCase: DownloadImageUseCase
+
+    @Inject
+    lateinit var updateNotificationUseCase: UpdateNotificationUseCase
+
+    @Inject
+    lateinit var playMediaUseCase: PlayMediaUseCase
+
+
+    @Inject
+    lateinit var getLastLoadedPlaylistUseCase: GetLastLoadedPlaylistUseCase
+
+    @Inject
+    lateinit var mediaSession: MediaSession
 
     override fun onCreate() {
         super.onCreate()
-        createNotificationChannel()
-
-        // Initialize the MediaSession
-        mediaSession = MediaSession.Builder(this, player)
-            .setSessionActivity(
-                PendingIntent.getActivity(
-                    this,
-                    0,
-                    Intent(this, MainActivity::class.java),
-                    PendingIntent.FLAG_IMMUTABLE
-                )
-            )
-            .build()
-
         // Start the service in the foreground with the media notification
-        startForeground(NOTIFICATION_ID, createNotification())
+        CoroutineScope(Dispatchers.Main).launch {
+            startForeground(NOTIFICATION_ID, updateNotificationUseCase("Loading playlist...", null))
+
+            playMediaUseCase.playerState.collect { state ->
+                if (state.currentMediaUrl.isNotEmpty()) {
+                    getLastLoadedPlaylistUseCase()?.first {
+                        it.path == state.currentMediaUrl
+                    }?.let { channel ->
+                        channel.thumbnailUrl?.let { logoUrl ->
+                            downloadImageUseCase(logoUrl)?.let { bitmap ->
+                                updateNotificationUseCase(channel.title, bitmap)
+
+                            }
+
+
+                        }
+
+
+                    }
+
+
+                }
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -56,51 +78,9 @@ class MediaPlayerService : MediaSessionService() {
         super.onDestroy()
     }
 
-    private fun createNotificationChannel() {
-        val channel = NotificationChannel(
-            CHANNEL_ID,
-            "Media Playback",
-            NotificationManager.IMPORTANCE_LOW
-        ).apply {
-            description = "Media playback controls"
-            setShowBadge(false)
-        }
-
-        val notificationManager =
-            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun createNotification(title: String = "M3U Player"): Notification {
-        // Create an intent to bring the app to the foreground
-        val intent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-        }
-        val pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-        return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(androidx.media3.session.R.drawable.media_session_service_notification_ic_music_note)
-            .setContentTitle(title)
-            .setContentText("Media playback active")
-            .setStyle(
-                MediaStyleNotificationHelper.MediaStyle(mediaSession)
-                    .setShowActionsInCompactView(0, 1, 2)
-            )
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setPriority(NotificationCompat.PRIORITY_LOW).setContentIntent(pendingIntent)
-            .build()
-    }
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession {
         return mediaSession
     }
 
-    companion object {
-        private const val CHANNEL_ID = "media_playback_channel"
-        private const val NOTIFICATION_ID = 1
-    }
 }

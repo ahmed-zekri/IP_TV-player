@@ -21,6 +21,9 @@ fun MainScreenPreview() {
             override suspend fun loadPlaylist(filePath: String): List<M3uEntry> =
                 listOf()
 
+            override fun getLastLoadedPlaylist(): List<M3uEntry> = emptyList()
+
+
         }),
         playMediaUseCase = PlayMediaUseCase(object : MediaController {
             override fun play(mediaUrl: String, title: String) {

@@ -1,6 +1,8 @@
 package com.zekri_ahmed.ip_tv_player.di
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.DefaultDataSource
@@ -8,6 +10,8 @@ import androidx.media3.datasource.cache.Cache
 import androidx.media3.datasource.cache.CacheDataSource
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
+import androidx.media3.session.MediaSession
+import com.zekri_ahmed.ip_tv_player.MainActivity
 import com.zekri_ahmed.ip_tv_player.data.local.CacheImpl
 import com.zekri_ahmed.ip_tv_player.data.repository.MediaControllerImpl
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
@@ -31,6 +35,7 @@ abstract class MediaModule {
     ): MediaController
 
     companion object {
+
         @OptIn(UnstableApi::class)
         @Provides
         @Singleton
@@ -55,5 +60,23 @@ abstract class MediaModule {
         @UnstableApi
         fun provideCache(@ApplicationContext context: Context): Cache = CacheImpl(context)
 
+
+        @Provides
+        @Singleton
+        fun provideMediaSession(
+            @ApplicationContext context: Context,
+            player: ExoPlayer
+        ): MediaSession {
+            return MediaSession.Builder(context, player)
+                .setSessionActivity(
+                    PendingIntent.getActivity(
+                        context,
+                        0,
+                        Intent(context, MainActivity::class.java),
+                        PendingIntent.FLAG_IMMUTABLE
+                    )
+                )
+                .build()
+        }
     }
 }

@@ -4,4 +4,5 @@ import com.zekri_ahmed.ip_tv_player.domain.model.M3uEntry
 
 interface M3uRepository {
     suspend fun loadPlaylist(filePath: String): List<M3uEntry>
+    fun getLastLoadedPlaylist(): List<M3uEntry>?
 }
