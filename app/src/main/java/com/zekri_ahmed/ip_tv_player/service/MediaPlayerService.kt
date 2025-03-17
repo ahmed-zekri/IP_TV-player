@@ -49,9 +49,9 @@ class MediaPlayerService : MediaSessionService() {
             startForeground(NOTIFICATION_ID, updateNotificationUseCase("Loading playlist...", null))
 
             playMediaUseCase.playerState.collect { state ->
-                if (state.currentMediaUrl.isNotEmpty()) {
+                if (state.m3uEntry?.path?.isNotEmpty() == true) {
                     getLastLoadedPlaylistUseCase()?.first {
-                        it.path == state.currentMediaUrl
+                        it.path == state.m3uEntry.path
                     }?.let { channel ->
                         channel.thumbnailUrl?.let { logoUrl ->
                             downloadImageUseCase(logoUrl)?.let { bitmap ->

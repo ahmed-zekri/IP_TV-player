@@ -105,13 +105,11 @@ class MediaControllerImpl @Inject constructor(
             isPlaying = player.isPlaying,
             currentPosition = player.currentPosition,
             bufferedPosition = player.bufferedPosition,
-            duration = player.duration,
-            currentMediaUrl = currentUrl,
-            title = player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "",
+            m3uEntry = playerState.value.m3uEntry,
             isFullScreen = playerState.value.isFullScreen,
             isLoading = player.isLoading,
             playerError = player.playerError?.message,
-            isPaused=isPaused
+            isPaused = isPaused
         )
 
         // Update the current media URL

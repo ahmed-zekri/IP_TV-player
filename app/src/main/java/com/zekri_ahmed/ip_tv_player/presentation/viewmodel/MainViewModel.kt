@@ -45,12 +45,11 @@ class MainViewModel @Inject constructor(
                 _playerState.value = PlayerState(
                     isPlaying = mediaPlayerState.isPlaying,
                     currentPosition = mediaPlayerState.currentPosition,
-                    duration = mediaPlayerState.duration,
+                    m3uEntry = mediaPlayerState.m3uEntry,
                     player = mediaPlayerState.player,
                     isLoading = mediaPlayerState.isLoading,
                     playerError = mediaPlayerState.playerError,
-                    isPaused = mediaPlayerState.isPaused,
-                    currentMediaUrl = mediaPlayerState.currentMediaUrl
+                    isPaused = mediaPlayerState.isPaused
                 )
             }
         }
