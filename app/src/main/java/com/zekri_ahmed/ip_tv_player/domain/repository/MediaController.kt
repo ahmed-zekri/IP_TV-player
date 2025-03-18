@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 
 interface MediaController {
-    fun play(mediaUrl: String, title: String = "")
+    fun play(index: Int)
     fun pause()
     fun resume()
     fun seekTo(position: Long)
@@ -18,7 +18,8 @@ data class PlayerState(
     val isPaused: Boolean = false,
     val currentPosition: Long = 0,
     val bufferedPosition: Long = 0,
-    val m3uEntry: M3uEntry? = null,
+    val currentIndex: Int = -1,
+    val currentM3uEntries: List<M3uEntry> = emptyList(),
     val isFullScreen: Boolean = false,
     val isLoading: Boolean = false,
     val playerError: String? = null

@@ -45,7 +45,8 @@ class MainViewModel @Inject constructor(
                 _playerState.value = PlayerState(
                     isPlaying = mediaPlayerState.isPlaying,
                     currentPosition = mediaPlayerState.currentPosition,
-                    m3uEntry = mediaPlayerState.m3uEntry,
+                    currentIndex = mediaPlayerState.currentIndex,
+                    currentM3uEntries = mediaPlayerState.currentM3uEntries,
                     player = mediaPlayerState.player,
                     isLoading = mediaPlayerState.isLoading,
                     playerError = mediaPlayerState.playerError,
@@ -71,8 +72,7 @@ class MainViewModel @Inject constructor(
     fun playChannel(index: Int) {
         if (index >= 0 && index < _playlist.value.size) {
             _currentChannelIndex.value = index
-            val currentChannel = _playlist.value[index]
-            playMediaUseCase(currentChannel)
+            playMediaUseCase(index)
         }
     }
 

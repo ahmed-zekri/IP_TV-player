@@ -26,9 +26,10 @@ fun MainScreenPreview() {
 
         }),
         playMediaUseCase = PlayMediaUseCase(object : MediaController {
-            override fun play(mediaUrl: String, title: String) {
+            override fun play(index: Int) {
 
             }
+
 
             override fun pause() {
 

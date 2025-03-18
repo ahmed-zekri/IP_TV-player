@@ -7,9 +7,11 @@ data class PlayerState(
     val isPaused: Boolean = false,
     val currentPosition: Long = 0,
     val isFullScreen: Boolean = false,
-    val m3uEntry: M3uEntry? = null,
+    val duration: Long = 0,
     val player: Any? = null,
     val isLoading: Boolean = false,
     val playerError: String? = null,
-    val currentMediaUrl: String? = null
+    val currentMediaUrl: String? = null,
+    val currentIndex: Int = -1,
+    val currentM3uEntries: List<M3uEntry> = emptyList()
 )

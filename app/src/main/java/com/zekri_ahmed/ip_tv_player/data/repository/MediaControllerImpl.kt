@@ -4,6 +4,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.zekri_ahmed.ip_tv_player.domain.repository.M3uRepository
 import com.zekri_ahmed.ip_tv_player.domain.repository.MediaController
 import com.zekri_ahmed.ip_tv_player.domain.repository.PlayerState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Singleton
 @Singleton
 @UnstableApi
 class MediaControllerImpl @Inject constructor(
-    private val player: ExoPlayer
+    private val player: ExoPlayer,
+    private val m3uRepository: M3uRepository
 ) : MediaController {
     private var isPaused: Boolean = false
     private val playerState = MutableStateFlow(PlayerState())
@@ -29,8 +31,6 @@ class MediaControllerImpl @Inject constructor(
     }
 
     private fun setupPlayer() {
-
-
         // Setup player listeners
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
@@ -58,22 +58,8 @@ class MediaControllerImpl @Inject constructor(
         })
     }
 
-    override fun play(mediaUrl: String, title: String) {
-        val mediaItem = MediaItem.Builder()
-            .setUri(mediaUrl)
-            .setMediaId(mediaUrl)
-            .apply {
-                if (title.isNotEmpty()) {
-                    setMediaMetadata(
-                        androidx.media3.common.MediaMetadata.Builder()
-                            .setTitle(title)
-                            .build()
-                    )
-                }
-            }
-            .build()
-
-        player.setMediaItem(mediaItem)
+    override fun play(index: Int) {
+        player.seekTo(index, 0)
         player.prepare()
         player.play()
     }
@@ -98,6 +84,26 @@ class MediaControllerImpl @Inject constructor(
 
 
     private fun updatePlayerState() {
+        if (player.mediaItemCount == 0)
+            m3uRepository.getLastLoadedPlaylist()?.let { m3uList ->
+                player.setMediaItems(m3uList.map { m3uEntry ->
+                    MediaItem.Builder()
+                        .setUri(m3uEntry.path)
+                        .setMediaId(m3uEntry.path)
+                        .apply {
+                            if (m3uEntry.title.isNotEmpty()) {
+                                setMediaMetadata(
+                                    androidx.media3.common.MediaMetadata.Builder()
+                                        .setTitle(m3uEntry.title)
+                                        .build()
+                                )
+                            }
+                        }
+                        .build()
+
+                })
+            }
+
         val currentUrl = player.currentMediaItem?.localConfiguration?.uri.toString()
 
         playerState.value = PlayerState(
@@ -105,7 +111,10 @@ class MediaControllerImpl @Inject constructor(
             isPlaying = player.isPlaying,
             currentPosition = player.currentPosition,
             bufferedPosition = player.bufferedPosition,
-            m3uEntry = playerState.value.m3uEntry,
+            currentIndex = m3uRepository.getLastLoadedPlaylist()
+                ?.indexOfFirst { it.path == player.currentMediaItem?.localConfiguration?.uri?.toString() }
+                ?: -1,
+            currentM3uEntries = m3uRepository.getLastLoadedPlaylist() ?: emptyList(),
             isFullScreen = playerState.value.isFullScreen,
             isLoading = player.isLoading,
             playerError = player.playerError?.message,

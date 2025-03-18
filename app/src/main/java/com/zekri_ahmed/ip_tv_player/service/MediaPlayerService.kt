@@ -7,7 +7,6 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import com.zekri_ahmed.ip_tv_player.data.NOTIFICATION_ID
 import com.zekri_ahmed.ip_tv_player.domain.usecase.DownloadImageUseCase
-import com.zekri_ahmed.ip_tv_player.domain.usecase.GetLastLoadedPlaylistUseCase
 import com.zekri_ahmed.ip_tv_player.domain.usecase.PlayMediaUseCase
 import com.zekri_ahmed.ip_tv_player.domain.usecase.UpdateNotificationUseCase
 import dagger.hilt.android.AndroidEntryPoint
@@ -37,9 +36,6 @@ class MediaPlayerService : MediaSessionService() {
 
 
     @Inject
-    lateinit var getLastLoadedPlaylistUseCase: GetLastLoadedPlaylistUseCase
-
-    @Inject
     lateinit var mediaSession: MediaSession
 
     override fun onCreate() {
@@ -49,16 +45,11 @@ class MediaPlayerService : MediaSessionService() {
             startForeground(NOTIFICATION_ID, updateNotificationUseCase("Loading playlist...", null))
 
             playMediaUseCase.playerState.collect { state ->
-                if (state.m3uEntry?.path?.isNotEmpty() == true) {
-                    getLastLoadedPlaylistUseCase()?.first {
-                        it.path == state.m3uEntry.path
-                    }?.let { channel ->
-                        channel.thumbnailUrl?.let { logoUrl ->
-                            downloadImageUseCase(logoUrl)?.let { bitmap ->
-                                updateNotificationUseCase(channel.title, bitmap)
+                state.currentM3uEntries.getOrNull(state.currentIndex)?.let { m3uEntry ->
 
-                            }
-
+                    m3uEntry.thumbnailUrl?.let { logoUrl ->
+                        downloadImageUseCase(logoUrl)?.let { bitmap ->
+                            updateNotificationUseCase(m3uEntry.title, bitmap)
 
                         }
 
@@ -67,6 +58,8 @@ class MediaPlayerService : MediaSessionService() {
 
 
                 }
+
+
             }
         }
     }

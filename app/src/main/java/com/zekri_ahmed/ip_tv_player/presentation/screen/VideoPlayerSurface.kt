@@ -44,7 +44,10 @@ import kotlinx.coroutines.delay
 @Composable
 @Preview
 fun VideoPlayerSurface(
-    playerState: PlayerState = PlayerState(),
+    playerState: PlayerState = PlayerState(
+        currentIndex = -1,
+        currentM3uEntries = emptyList()
+    ),
     playlist: List<M3uEntry> = emptyList(),
     resume: () -> Unit = {},
     pause: () -> Unit = {},
