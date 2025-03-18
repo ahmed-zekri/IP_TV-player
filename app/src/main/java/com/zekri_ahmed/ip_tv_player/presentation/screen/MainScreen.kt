@@ -1,8 +1,11 @@
 package com.zekri_ahmed.ip_tv_player.presentation.screen
 
+import android.app.PictureInPictureParams
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.util.Rational
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
@@ -24,6 +27,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.zekri_ahmed.ip_tv_player.presentation.viewmodel.MainViewModel
 
 @Composable
@@ -35,6 +41,9 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
     val playlist by viewModel.playlist.collectAsState()
     val playerState by viewModel.playerState.collectAsState()
     val currentChannelIndex by viewModel.currentChannelIndex.collectAsState()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val activity = LocalActivity.current
+    var isPaused by remember { mutableStateOf(false) }
 
     // Search query state
     var searchQuery by remember { mutableStateOf("") }
@@ -84,38 +93,60 @@ fun MainScreen(viewModel: MainViewModel = hiltViewModel()) {
                 viewModel::nextChannel,
                 viewModel::previousChannel,
                 viewModel::toggleFullScreen,
-                isLandscape // Pass the orientation state
+                isLandscape,
+                isPaused
+                // Pass the orientation state
             )
-
+        if (!isPaused)
         // Show other UI elements only if not in full-screen mode
-        if (!playerState.isFullScreen) {
-            if (playlist.isNotEmpty()) {
-                SearchBar(
-                    searchQuery = searchQuery,
-                    onSearchQueryChange = { searchQuery = it },
-                    onSearch = { focusManager.clearFocus() },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                )
-            }
-
-            // Channel List
-            LazyColumn(modifier = Modifier.weight(1f)) {
-                items(filteredPlaylist) { entry ->
-                    ChannelItem(
-                        entry = entry,
-                        isPlaying = playlist.indexOf(entry) == currentChannelIndex,
-                        onClick = {
-                            viewModel.playChannel(playlist.indexOf(entry))
-                        }
+            if (!playerState.isFullScreen) {
+                if (playlist.isNotEmpty()) {
+                    SearchBar(
+                        searchQuery = searchQuery,
+                        onSearchQueryChange = { searchQuery = it },
+                        onSearch = { focusManager.clearFocus() },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
                     )
                 }
-            }
 
-            if (playlist.isEmpty()) {
-                EmptyPlaylist(onOpenClick = { filePickerLauncher.launch("*/*") })
+                // Channel List
+                LazyColumn(modifier = Modifier.weight(1f)) {
+                    items(filteredPlaylist) { entry ->
+                        ChannelItem(
+                            entry = entry,
+                            isPlaying = playlist.indexOf(entry) == currentChannelIndex,
+                            onClick = {
+                                viewModel.playChannel(playlist.indexOf(entry))
+                            }
+                        )
+                    }
+                }
+
+                if (playlist.isEmpty()) {
+                    EmptyPlaylist(onOpenClick = { filePickerLauncher.launch("*/*") })
+                }
             }
-        }
+    }
+    LaunchedEffect(Unit) {
+        lifecycleOwner.lifecycle.addObserver(
+            object : DefaultLifecycleObserver {
+                override fun onPause(owner: LifecycleOwner) {
+                    super.onPause(owner)
+                    isPaused = true
+                    activity?.enterPictureInPictureMode(
+                        PictureInPictureParams.Builder()
+                            .setAspectRatio(Rational(16, 9))
+                            .build()
+                    )
+                }
+
+                override fun onResume(owner: LifecycleOwner) {
+                    super.onResume(owner)
+                    isPaused = false
+                }
+            }
+        )
     }
 }

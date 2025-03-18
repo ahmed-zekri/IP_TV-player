@@ -1,8 +1,5 @@
 package com.zekri_ahmed.ip_tv_player.presentation.screen
 
-import android.app.PictureInPictureParams
-import android.util.Rational
-import androidx.activity.compose.LocalActivity
 import androidx.annotation.OptIn
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -35,9 +32,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.AspectRatioFrameLayout
@@ -60,12 +54,10 @@ fun VideoPlayerSurface(
     nextChannel: () -> Unit = {},
     previousChannel: () -> Unit = {},
     toggleFullScreen: () -> Unit = {},
-    isLandscape: Boolean = false
+    isLandscape: Boolean = false,
+    isPaused: Boolean = false
 ) {
     var isControlsVisible by remember { mutableStateOf(true) }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    val activity = LocalActivity.current
-    var isPaused by remember { mutableStateOf(false) }
     // LaunchedEffect to hide controls after a delay
     LaunchedEffect(isControlsVisible) {
         if (isControlsVisible) {
@@ -91,7 +83,7 @@ fun VideoPlayerSurface(
             }
     ) {
         // Use AndroidView to embed the PlayerView in our Compose UI
-        Box {
+        Box(modifier = if (isPaused) Modifier.fillMaxSize() else Modifier) {
             AndroidView(
                 factory = { ctx ->
                     PlayerView(ctx).apply {
@@ -147,25 +139,6 @@ fun VideoPlayerSurface(
                     }
                 }
             }
-        LaunchedEffect(Unit) {
-            lifecycleOwner.lifecycle.addObserver(
-                object : DefaultLifecycleObserver {
-                    override fun onPause(owner: LifecycleOwner) {
-                        super.onPause(owner)
-                        isPaused = true
-                        activity?.enterPictureInPictureMode(
-                            PictureInPictureParams.Builder()
-                                .setAspectRatio(Rational(16, 9))
-                                .build()
-                        )
-                    }
 
-                    override fun onResume(owner: LifecycleOwner) {
-                        super.onResume(owner)
-                        isPaused = false
-                    }
-                }
-            )
-        }
     }
 }
